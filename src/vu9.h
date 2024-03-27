@@ -5,7 +5,7 @@
 void sndwave() {
 
   int sampleLeft = abs(analogRead(LEFT_IN_PIN) - 512);
-  Serial.print(sampleLeft);
+  //Serial.print(sampleLeft);
   sampleLeft = sampleLeft * ((float)sensitivity / 512);
 
   ledsLeft[N_PIXELS / 2] = ColorFromPalette(currentPalette, sampleLeft, sampleLeft * 2, LINEARBLEND); // Put the sample into the center

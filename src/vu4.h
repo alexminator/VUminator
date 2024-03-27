@@ -1,6 +1,6 @@
 /*
  * VU: Rainbow from bottom or middle, green through purple
- */
+*/
 
 uint8_t rainbowHue2(uint8_t pixel, uint8_t num_pixels) {
   uint8_t hue = 96 - pixel * (145 / num_pixels);

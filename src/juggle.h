@@ -2,8 +2,6 @@
  * Standby: Several colored dots, weaving in and out of sync with each other
  */
 
-const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
-
 void juggle() { 
   const uint8_t NUM_DOTS = 4; // Number of dots in use.
   const uint8_t HUE_INC = 16; // Incremental change in hue between each dot.

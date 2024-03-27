@@ -2,7 +2,7 @@
 // --------------------------------
 // -- VU Meter - Scott's version --
 // --------------------------------
-
+#include <Adafruit_NeoPixel.h>
 #include <FastLED.h>
 #include <EEPROM.h>
 #include <JC_Button.h>
@@ -23,6 +23,7 @@
 # define DC_OFFSET 0                // DC offset in aux signal [0]
 # define NOISE 0                    // Noise/hum/interference in aux signal [0]
 # define SAMPLES 64                 // Length of buffer for dynamic level adjustment [64]
+# define SAMPLES2 64                // Length of buffer for dynamic level adjustment  [64]
 # define TOP (N_PIXELS + 2)         // Allow dot to go slightly off scale [(N_PIXELS + 2)]
 # define PEAK_FALL 20               // Rate of peak falling dot [20]
 # define N_PIXELS_HALF (N_PIXELS / 2)
@@ -41,6 +42,9 @@ uint16_t lvlRight = 0;                   // Current "dampened" audio level
 uint16_t minLvlAvgRight = 0;             // For dynamic adjustment of graph low & high
 uint16_t maxLvlAvgRight = 512;
 
+byte dotCountLeft  = 0;      // Frame counter for delaying dot-falling speed
+byte dotCountRight = 0;      // Frame counter for delaying dot-falling speed
+
 CRGB ledsLeft[N_PIXELS];
 CRGB ledsRight[N_PIXELS];
 
@@ -48,6 +52,22 @@ uint8_t myhue = 0;
 
 CRGBPalette16 currentPalette;
 CRGBPalette16 targetPalette;
+
+const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(N_PIXELS, RIGHT_OUT_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip1 = Adafruit_NeoPixel(N_PIXELS, LEFT_OUT_PIN, NEO_GRB + NEO_KHZ800);
+
+//Colors
+uint32_t red = strip.Color(255, 0, 0);
+uint32_t orange = strip.Color(255, 127, 0);
+uint32_t yellow = strip.Color(255, 255, 0);
+uint32_t green = strip.Color(0, 255, 0);
+uint32_t blue = strip.Color(0, 0, 255);
+uint32_t purple = strip.Color(75, 0, 130);
+uint32_t white = strip.Color(125, 125, 125);
+
+int vol[SAMPLES];       // Collection of prior volume samples
 
 // --------------------
 // --- Button Stuff ---
@@ -58,7 +78,7 @@ bool autoChangeVisuals = false;
 Button modeBtn(BTN_PIN, DEBOUNCE_MS);
 
 void incrementButtonPushCounter() {
-  buttonPushCounter = (buttonPushCounter + 1) %16;
+  buttonPushCounter = (buttonPushCounter + 1) %19;
   EEPROM.write(1, buttonPushCounter);
 }
 
@@ -70,11 +90,11 @@ int sensitivity = 0;
 //#include "colorWipe.h"
 #include "rainbow.h"
 #include "fire.h"
-//#include "twinkle.h"
+#include "twinkle.h"
 #include "balls.h"
 #include "juggle.h"
 #include "sinelon.h"
-//#include "fireblu.h"
+#include "fireblu.h"
 #include "ripple.h"
 // VU
 #include "vu4.h"
@@ -84,7 +104,7 @@ int sensitivity = 0;
 #include "vu8.h"
 #include "vu9.h"
 #include "vu10.h"
-
+#include "vu11.h"
 /*
 void vu4(bool is_centered, uint8_t channel);
 void vu5(bool is_centered, uint8_t channel);
@@ -216,30 +236,42 @@ void loop() {
       vu7(false);
       copyLeftToRight();
       break;
-  
+
     case 10:
+      vu11();
+      break;  
+  
+    case 11:
       sinelon();
       break;
   
-    case 11:
+    case 12:
       balls();
       break;
   
-    case 12:
+    case 13:
       juggle();
       break;
   
-    case 13:
+    case 14:
       fire();
       break;
   
-    case 14:
+    case 15:
       ripple(true);
       break;
   
-    case 15:
+    case 16:
       rainbow(10);
       break;
+
+    case 17:
+      fireblu();
+      break;
+
+     case 18:
+      twinkle();
+      break; 
   }
   sensitivity = analogRead(SENSITIVITY_PIN);
   FastLED.setBrightness(map(analogRead(BRIGHTNESS_PIN),0,1023,0,255));

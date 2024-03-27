@@ -3,8 +3,8 @@
  */
 
 void vu8() {
-  const uint8_t DRAW_MAX = 30;
-  const uint8_t SEGMENTS = 3;
+  //const uint8_t DRAW_MAX = 30;
+  //const uint8_t SEGMENTS = 3;
   
   static int origin = 0;
   static uint8_t scroll_color = 0;

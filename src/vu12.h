@@ -1,8 +1,8 @@
 /*
- * blue red and green dots
+ * shooting star
  */
 
-void vu11()
+void vu12()
 {
   uint16_t height = auxReading(0);
 
@@ -13,29 +13,61 @@ void vu11()
   if (height > peakLeft)
     peakLeft = height; // Keep 'peak' dot at top
 
+#ifdef CENTERED
+  // Color pixels based on rainbow gradient
+  for (i = 0; i < (N_PIXELS / 2); i++)
+  {
+    if (((N_PIXELS / 2) + i) >= height)
+    {
+      strip.setPixelColor(((N_PIXELS / 2) + i), 0, 0, 0);
+      strip.setPixelColor(((N_PIXELS / 2) - i), 0, 0, 0);
+    }
+    else
+    {
+      strip.setPixelColor(((N_PIXELS / 2) + i), Wheel(map(((N_PIXELS / 2) + i), 0, strip.numPixels() - 1, 30, 150)));
+      strip.setPixelColor(((N_PIXELS / 2) - i), Wheel(map(((N_PIXELS / 2) - i), 0, strip.numPixels() - 1, 30, 150)));
+    }
+  }
+
+  // Draw peak dot
+  if (peakLeft > 0 && peakRight <= LAST_PIXEL_OFFSET)
+  {
+    strip.setPixelColor(((N_PIXELS / 2) + peakLeft), 255, 255, 255); // (peak,Wheel(map(peak,0,strip.numPixels()-1,30,150)));
+    strip.setPixelColor(((N_PIXELS / 2) - peakLeft), 255, 255, 255); // (peak,Wheel(map(peak,0,strip.numPixels()-1,30,150)));
+  }
+#else
   // Color pixels based on rainbow gradient
   for (i = 0; i < N_PIXELS; i++)
   {
     if (i >= height)
+    {
       strip.setPixelColor(i, 0, 0, 0);
+    }
     else
-      strip.setPixelColor(i, 0, 0, 255);
+    {
+      strip.setPixelColor(i, Wheel(map(i, 0, strip.numPixels() - 1, 30, 150)));
+    }
   }
 
   // Draw peak dot
-  if (peakLeft > 0 && peakLeft <= N_PIXELS - 1)
-    strip.setPixelColor(peakLeft, (map(peakLeft, 0, strip.numPixels() - 1, green, green)));
+  if (peakLeft > 0 && peakLeft <= LAST_PIXEL_OFFSET)
+  {
+    strip.setPixelColor(peakLeft, 255, 255, 255); // (peak,Wheel(map(peak,0,strip.numPixels()-1,30,150)));
+  }
 
-  strip.show(); // Update strip
+#endif
 
   // Every few frames, make the peak pixel drop by 1:
 
-  if (++dotCountLeft >= PEAK_FALL)
-  { // fall rate
+  if (millis() - lastTime >= PEAK_FALL_MILLIS)
+  {
+    lastTime = millis();
 
+    strip.show(); // Update strip
+
+    // fall rate
     if (peakLeft > 0)
       peakLeft--;
-    dotCountLeft = 0;
   }
 
   volLeft[volCountLeft] = n; // Save sample for dynamic leveling
@@ -62,7 +94,7 @@ void vu11()
   minLvlAvgLeft = (minLvlAvgLeft * 63 + minLvlLeft) >> 6; // Dampen min/max levels
   maxLvlAvgLeft = (maxLvlAvgLeft * 63 + maxLvlLeft) >> 6; // (fake rolling average)
 
-  n = analogRead(RIGHT_IN_PIN);            // Raw reading from mic
+  n = analogRead(RIGHT_IN_PIN);         // Raw reading from mic
   n = abs(n - 512 - DC_OFFSET);         // Center on zero
   n = (n <= NOISE) ? 0 : (n - NOISE);   // Remove noise/hum
   lvlRight = ((lvlRight * 7) + n) >> 3; // "Dampened" reading (else looks twitchy)
@@ -77,29 +109,61 @@ void vu11()
   if (height > peakRight)
     peakRight = height; // Keep 'peak' dot at top
 
+#ifdef CENTERED
+  // Color pixels based on rainbow gradient
+  for (i = 0; i < (N_PIXELS / 2); i++)
+  {
+    if (((N_PIXELS / 2) + i) >= height)
+    {
+      strip1.setPixelColor(((N_PIXELS / 2) + i), 0, 0, 0);
+      strip1.setPixelColor(((N_PIXELS / 2) - i), 0, 0, 0);
+    }
+    else
+    {
+      strip1.setPixelColor(((N_PIXELS / 2) + i), Wheel(map(((N_PIXELS / 2) + i), 0, strip1.numPixels() - 1, 30, 150)));
+      strip1.setPixelColor(((N_PIXELS / 2) - i), Wheel(map(((N_PIXELS / 2) - i), 0, strip1.numPixels() - 1, 30, 150)));
+    }
+  }
+
+  // Draw peak dot
+  if (peakRight > 0 && peakRight <= LAST_PIXEL_OFFSET)
+  {
+    strip1.setPixelColor(((N_PIXELS / 2) + peakRight), 255, 255, 255); // (peak,Wheel(map(peak,0,strip.numPixels()-1,30,150)));
+    strip1.setPixelColor(((N_PIXELS / 2) - peakRight), 255, 255, 255); // (peak,Wheel(map(peak,0,strip.numPixels()-1,30,150)));
+  }
+#else
   // Color pixels based on rainbow gradient
   for (i = 0; i < N_PIXELS; i++)
   {
     if (i >= height)
+    {
       strip1.setPixelColor(i, 0, 0, 0);
+    }
     else
-      strip1.setPixelColor(i, 0, 0, 255);
+    {
+      strip1.setPixelColor(i, Wheel(map(i, 0, strip1.numPixels() - 1, 30, 150)));
+    }
   }
 
   // Draw peak dot
-  if (peakRight > 0 && peakRight <= N_PIXELS - 1)
-    strip1.setPixelColor(peakRight, (map(peakRight, 0, strip1.numPixels() - 1, red, red)));
+  if (peakRight > 0 && peakRight <= LAST_PIXEL_OFFSET)
+  {
+    strip1.setPixelColor(peakRight, 255, 255, 255); // (peak,Wheel(map(peak,0,strip.numPixels()-1,30,150)));
+  }
 
-  strip1.show(); // Update strip
+#endif
 
   // Every few frames, make the peak pixel drop by 1:
 
-  if (++dotCountRight >= PEAK_FALL)
-  { // fall rate
+  if (millis() - lastTime >= PEAK_FALL_MILLIS)
+  {
+    lastTime = millis();
 
+    strip1.show(); // Update strip
+
+    // fall rate
     if (peakRight > 0)
       peakRight--;
-    dotCountRight = 0;
   }
 
   volRight[volCountRight] = n; // Save sample for dynamic leveling
